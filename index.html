@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f4858">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Art Tools">
+<meta name="description" content="Searchable inventory of my physical art tools and supplies.">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>Art Tools — Do I Own It?</title>
+<style>
+  :root{
+    --bg:#f6f4f1; --card:#ffffff; --ink:#1c2226; --muted:#66727a;
+    --line:#e2ddd7; --accent:#2f4858; --accent-soft:#e8eef1;
+    --own:#2e6b4f; --own-bg:#e4f0e9;
+    --wish:#8a5a12; --wish-bg:#fbeed8;
+    --up:#7a3b6b; --up-bg:#f6e6f2;
+    --off:#6b6b6b; --off-bg:#ececec;
+    --low:#a33a2a; --low-bg:#fbe4e0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14181b; --card:#1e2429; --ink:#eef2f4; --muted:#9aa7af;
+      --line:#2c343a; --accent:#7fb3cc; --accent-soft:#22303a;
+      --own:#7fd3a6; --own-bg:#1d3a2c;
+      --wish:#e3b566; --wish-bg:#3a2f1a;
+      --up:#dda6cf; --up-bg:#372432;
+      --off:#a0a0a0; --off-bg:#2a2a2a;
+      --low:#f0a094; --low-bg:#3d221d;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:48px;
+  }
+  header{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    padding:14px 14px 8px; border-bottom:1px solid var(--line);
+    padding-top:max(14px, calc(env(safe-area-inset-top) + 6px));
+  }
+  h1{margin:0 0 2px; font-size:19px; letter-spacing:-.01em}
+  .sub{margin:0 0 10px; font-size:12.5px; color:var(--muted)}
+  .searchwrap{position:relative}
+  #q{
+    width:100%; padding:15px 44px 15px 15px; font-size:17px;
+    border:2px solid var(--line); border-radius:13px;
+    background:var(--card); color:var(--ink); outline:none;
+  }
+  #q:focus{border-color:var(--accent)}
+  #q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+  #clear{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    border:0; background:transparent; color:var(--muted);
+    font-size:22px; width:36px; height:36px; border-radius:50%; cursor:pointer;
+    display:none;
+  }
+  #clear.on{display:block}
+  .chips{display:flex; gap:7px; overflow-x:auto; padding:10px 0 3px; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto; padding:8px 13px; border-radius:999px; font-size:13.5px;
+    border:1px solid var(--line); background:var(--card); color:var(--muted);
+    cursor:pointer; white-space:nowrap;
+  }
+  .chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+  @media (prefers-color-scheme: dark){ .chip[aria-pressed="true"]{color:#0f1519} }
+  #count{padding:10px 14px 2px; font-size:12.5px; color:var(--muted)}
+  main{padding:4px 14px 0}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:11px;
+  }
+  .top{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+  .name{font-weight:700; font-size:16.5px; line-height:1.32; margin:0}
+  .brand{color:var(--muted); font-size:13.5px; margin:3px 0 0}
+  .badge{
+    flex:0 0 auto; font-size:11px; font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; padding:4px 9px; border-radius:999px;
+  }
+  .b-own{background:var(--own-bg); color:var(--own)}
+  .b-wish{background:var(--wish-bg); color:var(--wish)}
+  .b-up{background:var(--up-bg); color:var(--up)}
+  .b-off{background:var(--off-bg); color:var(--off)}
+  .b-low{background:var(--low-bg); color:var(--low)}
+  .cat{display:inline-block; margin:9px 0 0; font-size:11.5px; color:var(--accent);
+       background:var(--accent-soft); padding:3px 9px; border-radius:6px}
+  dl{margin:11px 0 0; display:grid; grid-template-columns:auto 1fr; gap:5px 12px; font-size:13.5px}
+  dt{color:var(--muted)}
+  dd{margin:0}
+  a{color:var(--accent)}
+  .scan{display:inline-block; margin-top:11px; font-size:13.5px; font-weight:600; text-decoration:none;
+        border:1px solid var(--line); padding:8px 12px; border-radius:9px}
+  .empty{
+    text-align:center; padding:46px 20px; border:2px dashed var(--line);
+    border-radius:16px; margin-top:10px; background:var(--card);
+  }
+  .empty .big{font-size:20px; font-weight:700; margin:0 0 8px}
+  .empty p{margin:0; color:var(--muted); font-size:14px}
+  footer{padding:26px 16px 10px; font-size:12.5px; color:var(--muted); text-align:center; line-height:1.7}
+  footer a{display:inline-block; margin:0 7px}
+  mark{background:#ffe9a8; color:inherit; border-radius:3px; padding:0 1px}
+  @media (prefers-color-scheme: dark){ mark{background:#6b5a1f; color:#fff} }
+  #net{display:none; margin:8px 14px 0; padding:8px 11px; border-radius:9px;
+       background:var(--accent-soft); color:var(--accent); font-size:12.5px}
+  #net.on{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Do I own it?</h1>
+  <p class="sub">Snapshot of <span id="total"></span> items · last updated <span id="updated"></span></p>
+  <div class="searchwrap">
+    <input id="q" type="search" placeholder="Search name, brand, model, UPC…"
+           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    <button id="clear" aria-label="Clear search">&times;</button>
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<div id="net">Offline — showing the last saved copy of your inventory.</div>
+<p id="count"></p>
+<main id="results"></main>
+
+<footer>
+  <a href="https://docs.google.com/spreadsheets/d/1NOXgmMHkuHRvcoh-N_QV0y7UxEE5avPwH2MGv03q_K0/edit">Open the live Google Sheet</a>
+  <a href="https://drive.google.com/drive/folders/1XCZKNaxVMuZE9FKAFa0kHK2x-p3RaBa1">Scan a new tool into the Inbox</a>
+  <div style="margin-top:10px">This page is a snapshot. The Sheet is the live copy — ask Claude to refresh this page after logging new tools.</div>
+</footer>
+
+<script>
+const UPDATED = "2026-08-15";
+const TOOLS = [
+  {
+    status:"Own", category:"Cutting & Shaping",
+    name:"Slice Precision Cutter (micro-ceramic blade)",
+    brand:"EK Tools (EK Success Brands)", model:"54-00098",
+    specs:"Micro-ceramic safety blade; non-slip finish; pen-style precision cutter",
+    qty:"1", consumable:"N", stock:"n/a", stored:"UK",
+    price:"UK", retailer:"UK", upc:"015586964622",
+    scan:"https://drive.google.com/file/d/1giOfCc0YV1WVowHai3KSHJQRwFwuilXx/view",
+    notes:"Package ©2016, date code 09/05/2017. Ceramic blade — no rust, long life, safer than steel."
+  },
+  {
+    status:"Own", category:"Studio Support",
+    name:"Lume Series 2x COB LED Magnifier",
+    brand:"Carson Optical", model:"AS-95",
+    specs:"2x aspheric lens + 7x spot lens; 3 COB LEDs, 2 brightness settings; takes 2 AAA (not included)",
+    qty:"1", consumable:"N", stock:"n/a", stored:"UK",
+    price:"$4.99", retailer:"Hobby Lobby", upc:"750668013507",
+    scan:"https://drive.google.com/file/d/179VUuPJVth95JhjJPS1xsPt54ZwxxbLH/view",
+    notes:"©2020 Carson Optical. Hobby Lobby sticker: $19.29 marked down to $4.99. Batteries not included."
+  }
+];
+
+const results = document.getElementById('results');
+const countEl = document.getElementById('count');
+const q = document.getElementById('q');
+const clearBtn = document.getElementById('clear');
+document.getElementById('total').textContent = TOOLS.length;
+document.getElementById('updated').textContent = UPDATED;
+
+let activeCat = "All";
+const cats = ["All", ...Array.from(new Set(TOOLS.map(t => t.category))).sort()];
+const chips = document.getElementById('chips');
+cats.forEach(c => {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.textContent = c;
+  b.setAttribute('aria-pressed', c === activeCat);
+  b.onclick = () => {
+    activeCat = c;
+    [...chips.children].forEach(x => x.setAttribute('aria-pressed', x.textContent === c));
+    render();
+  };
+  chips.appendChild(b);
+});
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+function hay(t){
+  return norm([t.name, t.brand, t.model, t.specs, t.category, t.upc, t.notes, t.retailer, t.stored].join(' ')) + ' ' + String(t.upc || '');
+}
+function highlight(text, terms){
+  let out = esc(text);
+  terms.filter(x => x.length > 1).forEach(term => {
+    const re = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    out = out.replace(re, '<mark>$1</mark>');
+  });
+  return out;
+}
+function badge(t){
+  const map = {'Own':['b-own','Own'],'Wishlist':['b-wish','Wishlist'],
+    'Want to Upgrade':['b-up','Upgrading'],'Retired':['b-off','Retired'],'Used Up':['b-low','Used up']};
+  const [cls, label] = map[t.status] || ['b-off', t.status];
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+function render(){
+  const terms = norm(q.value).split(' ').filter(Boolean);
+  clearBtn.classList.toggle('on', q.value.length > 0);
+
+  let list = TOOLS.filter(t => activeCat === 'All' || t.category === activeCat);
+  if (terms.length) list = list.filter(t => { const h = hay(t); return terms.every(w => h.includes(w)); });
+  list.sort((a,b) => a.name.localeCompare(b.name));
+
+  countEl.textContent = list.length + (list.length === 1 ? ' item' : ' items');
+
+  if (!list.length){
+    results.innerHTML = `<div class="empty">
+      <p class="big">No match found</p>
+      <p>Nothing in your inventory matches ${q.value ? '“' + esc(q.value) + '”' : 'this filter'}.
+      If you were about to buy it — you probably don't own it yet.</p></div>`;
+    return;
+  }
+
+  results.innerHTML = list.map(t => {
+    const rows = [];
+    if (t.model && t.model !== 'n/a') rows.push(['Model', highlight(t.model, terms)]);
+    if (t.specs && t.specs !== 'n/a') rows.push(['Specs', highlight(t.specs, terms)]);
+    if (t.qty && t.qty !== 'n/a') rows.push(['Qty', esc(t.qty)]);
+    if (t.consumable === 'Y' && t.stock && t.stock !== 'n/a') rows.push(['Stock', esc(t.stock)]);
+    if (t.stored && t.stored !== 'UK' && t.stored !== 'n/a') rows.push(['Stored', esc(t.stored)]);
+    if (t.price && t.price !== 'UK') rows.push(['Paid', esc(t.price) + (t.retailer && t.retailer !== 'UK' ? ' · ' + esc(t.retailer) : '')]);
+    if (t.upc) rows.push(['UPC', highlight(t.upc, terms)]);
+
+    return `<article class="card">
+      <div class="top">
+        <div>
+          <p class="name">${highlight(t.name, terms)}</p>
+          <p class="brand">${highlight(t.brand, terms)}</p>
+        </div>
+        ${badge(t)}
+      </div>
+      <span class="cat">${esc(t.category)}</span>
+      <dl>${rows.map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${t.notes ? `<p class="brand" style="margin-top:10px">${highlight(t.notes, terms)}</p>` : ''}
+      ${t.scan ? `<a class="scan" href="${esc(t.scan)}" target="_blank" rel="noopener">View package scan</a>` : ''}
+    </article>`;
+  }).join('');
+}
+
+q.addEventListener('input', render);
+clearBtn.onclick = () => { q.value = ''; q.focus(); render(); };
+render();
+
+const net = document.getElementById('net');
+const setNet = () => net.classList.toggle('on', !navigator.onLine);
+addEventListener('online', setNet); addEventListener('offline', setNet); setNet();
+
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
